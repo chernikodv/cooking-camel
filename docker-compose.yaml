@@ -1,0 +1,24 @@
+version: '3.1'
+
+services:
+  cooking_camel_postgres:
+    image: postgres:13
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: adm
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: cooking_camel_db
+    container_name: cooking_camel_postgres
+
+  cooking_camel_backend:
+    image: cooking_camel_image
+    ports:
+      - "8080:8080"
+    depends_on:
+      - cooking_camel_postgres
+    links:
+      - cooking_camel_postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://cooking_camel_postgres:5432/cooking_camel_db
+    container_name: cooking_camel_backend

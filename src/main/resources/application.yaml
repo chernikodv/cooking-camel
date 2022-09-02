@@ -1,0 +1,40 @@
+server:
+  port: 8080
+  servlet:
+      context-path: /cooking-camel
+
+spring:
+  flyway:
+    user: adm
+    schemas: flyway
+    password: changeme
+    table: flyway_schema_history
+    locations: classpath:db/migration
+
+  datasource:
+    username: adm
+    password: changeme
+    name: cooking_camel_db
+    url: jdbc:postgresql://localhost:5432/cooking_camel_db
+
+  jpa:
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        use_sql_comments: false
+        generate_statistics: true
+        dialect: org.hibernate.dialect.PostgreSQL95Dialect
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} - [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    root: INFO
+    org:
+      hibernate:
+        type: TRACE
+
+jwt:
+  secret: cookingCamelSecretKey
+  expiration: 86400000
