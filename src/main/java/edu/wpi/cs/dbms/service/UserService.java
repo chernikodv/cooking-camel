@@ -40,6 +40,6 @@ public class UserService {
 
     public User findById(String username) {
         final Optional<User> maybeUser = userRepository.findById(username);
-        return maybeUser.orElseThrow(() -> new NoSuchElementException("Could not find a user by the given username!"));
+        return maybeUser.orElseThrow(() -> new NoSuchElementException("Could not find a user by the given username ..."));
     }
 }
