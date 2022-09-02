@@ -31,51 +31,39 @@ public class RecipeService {
     private final AuthenticationTokenInfoExtractor tokenInfoExtractor;
 
     public List<SearchRecipeResponse> find(List<Long> ingredientIds, Integer page, Integer size) {
-        // find ingredients by ids
         final List<Ingredient> ingredients = ingredientRepository.findAllById(ingredientIds);
-
+        final List<Recipe> recipes = recipeRepository.findAllByIngredientsIn(ingredients);
         final User user = userService.findById(tokenInfoExtractor.getUsername());
 
-        // find recipes by ingredients that we found before
-        final List<Recipe> recipes = recipeRepository.findAllByIngredientsIn(ingredients);
-
         return recipes.stream()
-                .distinct() // eliminate duplicate recipes since recipes are found based on each ingredient
-                .map(recipe -> // map unique recipes to a SearchRecipeResponse which contains all searched for ingredients the recipe contains
-                        recipeMapper.mapEntityToSearchResponse(recipe, ingredients, user))
-                .sorted( // calculates relevance scores and sorts them in descending order (high to low)
-                        Comparator.comparingDouble(SearchRecipeResponse::findRelevance)
-                                .thenComparing(SearchRecipeResponse::getTitle))
+                .distinct()
+                .map(recipe -> recipeMapper.mapEntityToSearchResponse(recipe, ingredients, user))
+                .sorted(Comparator.comparingDouble(SearchRecipeResponse::findRelevance)
+                        .thenComparing(SearchRecipeResponse::getTitle)
+                )
                 .skip((long) page * size)
                 .limit(size)
                 .collect(Collectors.toList());
     }
 
     public RecipeResponse findRecipeById(Long ingredientId) {
-        Optional<Recipe> maybeRecipe = recipeRepository.findById(ingredientId);
-        if (maybeRecipe.isEmpty())
-            new NoSuchElementException("Could not find a recipe by the given id!");
+        final Optional<Recipe> maybeRecipe = recipeRepository.findById(ingredientId);
+        if (maybeRecipe.isEmpty()) {
+            throw new NoSuchElementException("Could not find a recipe by the given id ...");
+        }
 
         final User user = userService.findById(tokenInfoExtractor.getUsername());
-
         return recipeMapper.mapEntityToResponse(maybeRecipe.get(), user);
-
-
     }
 
     public RecipeResponse create(CreateRecipeRequest createRecipeRequest) {
         final Recipe recipe = recipeMapper.mapCreateRequestToEntity(createRecipeRequest);
-
-        // find user by owner id
         final User owner = userService.findById(tokenInfoExtractor.getUsername());
         recipe.setOwner(owner);
 
-        // find ingredients by ids stored in the database
         final List<Ingredient> ingredients = ingredientRepository.findAllById(createRecipeRequest.getIngredientIds());
         recipe.getIngredients().addAll(ingredients);
 
-        // 1. it saves recipe to the database
-        // 2. it saves values to the recipe_ingredient many-to-many-table
         final Recipe savedRecipe = recipeRepository.save(recipe);
         return recipeMapper.mapEntityToResponse(savedRecipe, owner);
     }
@@ -84,7 +72,6 @@ public class RecipeService {
         final User user = userService.findById(tokenInfoExtractor.getUsername());
         final Recipe recipe = recipeMapper.mapUpdateRequestToExistingEntity(updateRecipeRequest, findById(id));
 
-        // find ingredients by ids stored in the database
         final List<Ingredient> ingredients = ingredientRepository.findAllById(updateRecipeRequest.getIngredientIds());
         recipe.getIngredients().addAll(ingredients);
 
@@ -127,12 +114,8 @@ public class RecipeService {
     public List<RecipeResponse> findTrending(Integer page, Integer size) {
         final User user = userService.findById(tokenInfoExtractor.getUsername());
         final List<String> trendingRecipeTitles = favoriteService.findTrendingRecipeTitles(page, size);
-        final List<Recipe> trendingRecipes = new ArrayList<>(size);
-        for (final String title : trendingRecipeTitles) {
-            trendingRecipes.add(findByTitle(title));
-        }
-
-        return trendingRecipes.stream()
+        return trendingRecipeTitles.stream()
+                .map(this::findByTitle)
                 .map(recipe -> recipeMapper.mapEntityToResponse(recipe, user))
                 .collect(Collectors.toList());
     }
@@ -144,23 +127,23 @@ public class RecipeService {
         try {
             recipeRepository.delete(recipe);
         } catch (Exception e) {
-            throw new DeleteResourceException("Could not delete a recipe by the given id!");
+            throw new DeleteResourceException("Could not delete a recipe by the given id ...");
         }
 
         return ResponseEntity.ok(GenericResponse.builder()
                 .code(HttpStatus.OK.value())
-                .message("Recipe was successfully deleted!")
+                .message("Recipe successfully deleted ...")
                 .build()
         );
     }
 
     private Recipe findById(Long id) {
         final Optional<Recipe> maybeRecipe = recipeRepository.findById(id);
-        return maybeRecipe.orElseThrow(() -> new NoSuchElementException("Could not find a recipe by the given id!"));
+        return maybeRecipe.orElseThrow(() -> new NoSuchElementException("Could not find a recipe by the given id ..."));
     }
 
     private Recipe findByTitle(String title) {
         final Optional<Recipe> maybeRecipe = recipeRepository.findByTitle(title);
-        return maybeRecipe.orElseThrow(() -> new NoSuchElementException("Could not find a recipe by the given title!"));
+        return maybeRecipe.orElseThrow(() -> new NoSuchElementException("Could not find a recipe by the given title ..."));
     }
 }
