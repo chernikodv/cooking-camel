@@ -48,7 +48,7 @@ public class UserMapper {
         }
 
         if (!passwordEncoder.matches(oldPasswordFromRequest, user.getPassword())) {
-            throw new PasswordMatchException("Current password does not match with the provided password!");
+            throw new PasswordMatchException("Current password does not match with the provided password ...");
         }
 
         user.setPassword(passwordEncoder.encode(updateUserRequest.getNewPassword()));
