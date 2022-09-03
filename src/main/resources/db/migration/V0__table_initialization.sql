@@ -1,3 +1,6 @@
+ALTER DATABASE cooking_camel_db
+SET timezone TO 'America/New_York';
+
 CREATE SCHEMA IF NOT EXISTS cooking_camel_schema;
 
 SET search_path TO cooking_camel_schema;
