@@ -8,9 +8,9 @@ import lombok.Value;
 public class SearchRecipeResponse {
     Long id;
     String title;
+    Boolean favorite;
     String directions;
     String ownerUsername;
-    Boolean favorite;
     String detailedIngredients;
     Integer realIngredientsAmount;
     Integer relevantIngredientsAmount;
