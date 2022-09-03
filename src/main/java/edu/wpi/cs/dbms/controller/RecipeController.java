@@ -7,15 +7,23 @@ import edu.wpi.cs.dbms.domain.dto.recipe.SearchRecipeResponse;
 import edu.wpi.cs.dbms.domain.dto.recipe.UpdateRecipeRequest;
 import edu.wpi.cs.dbms.service.RecipeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000/")
 @RequestMapping(path = "/api/recipes")
+@CrossOrigin(origins = "http://localhost:3000/")
 public class RecipeController {
 
     private final RecipeService recipeService;
@@ -24,12 +32,7 @@ public class RecipeController {
     public List<SearchRecipeResponse> find(@RequestParam List<Long> ingredientsId,
                                            @RequestParam(defaultValue = "0") Integer page,
                                            @RequestParam(defaultValue = "10", required = false) Integer size) {
-        return recipeService.find(ingredientsId, page, size);
-    }
-
-    @GetMapping(path = "/recipe")
-    public RecipeResponse find(Long ingredientId)  {
-        return recipeService.findRecipeById(ingredientId);
+        return recipeService.find(page, size, ingredientsId);
     }
 
     @PostMapping
@@ -37,15 +40,16 @@ public class RecipeController {
         return recipeService.create(recipeRequest);
     }
 
+    // TODO: add id to request
     @PutMapping(path = "/{id}")
     public RecipeResponse update(@PathVariable Long id, @RequestBody UpdateRecipeRequest recipeRequest) {
         return recipeService.update(id, recipeRequest);
     }
-
-    @DeleteMapping(path = "/{id}")
-    public ResponseEntity<GenericResponse> delete(@PathVariable Long id) {
-        return recipeService.delete(id);
-    }
+//
+//    @DeleteMapping(path = "/{id}")
+//    public ResponseEntity<GenericResponse> delete(@PathVariable Long id) {
+//        return recipeService.delete(id);
+//    }
 
     @GetMapping(path = "/favorites")
     public List<RecipeResponse> findFavorites(@RequestParam(defaultValue = "0") Integer page,
@@ -59,7 +63,7 @@ public class RecipeController {
     }
 
     @DeleteMapping(path = "/favorites/{id}")
-    public RecipeResponse removeFavorite(@PathVariable Long id) {
+    public GenericResponse removeFavorite(@PathVariable Long id) {
         return recipeService.removeFavorite(id);
     }
 

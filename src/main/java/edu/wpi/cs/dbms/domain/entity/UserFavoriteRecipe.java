@@ -42,7 +42,8 @@ import java.time.LocalDateTime;
                         columns = {
                                 @ColumnResult(name = "id", type = Long.class),
                                 @ColumnResult(name = "count", type = Integer.class)
-                        })
+                        }
+                )
         }
 )
 public class UserFavoriteRecipe {
