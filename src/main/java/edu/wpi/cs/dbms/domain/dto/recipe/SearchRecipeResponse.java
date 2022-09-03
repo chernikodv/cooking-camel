@@ -14,8 +14,4 @@ public class SearchRecipeResponse {
     String detailedIngredients;
     Integer realIngredientsAmount;
     Integer relevantIngredientsAmount;
-
-    public double findRelevance() {
-        return (double) realIngredientsAmount / relevantIngredientsAmount;
-    }
 }
