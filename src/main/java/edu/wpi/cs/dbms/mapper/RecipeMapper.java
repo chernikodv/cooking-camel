@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 @Component
 public class RecipeMapper {
 
+    // TODO: update semantics
     public RecipeResponse mapEntityToResponse(Recipe recipe, User user) {
         final User owner = recipe.getOwner();
         return RecipeResponse.builder()
@@ -45,7 +46,7 @@ public class RecipeMapper {
         return recipe;
     }
 
-    public SearchRecipeResponse mapEntityToSearchResponse(Recipe recipe, List<Ingredient> ingredientByIds, User user) {
+    public SearchRecipeResponse mapEntityToSearchResponse(User user, Recipe recipe, List<Ingredient> ingredientByIds) {
         final User owner = recipe.getOwner();
         final List<Ingredient> realIngredients = recipe.getIngredients();
         final List<Ingredient> relevantIngredients = ingredientByIds.stream().filter(realIngredients::contains).collect(Collectors.toList());
