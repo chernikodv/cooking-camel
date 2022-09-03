@@ -45,11 +45,6 @@ public class RecipeController {
     public RecipeResponse update(@PathVariable Long id, @RequestBody UpdateRecipeRequest recipeRequest) {
         return recipeService.update(id, recipeRequest);
     }
-//
-//    @DeleteMapping(path = "/{id}")
-//    public ResponseEntity<GenericResponse> delete(@PathVariable Long id) {
-//        return recipeService.delete(id);
-//    }
 
     @GetMapping(path = "/favorites")
     public List<RecipeResponse> findFavorites(@RequestParam(defaultValue = "0") Integer page,
