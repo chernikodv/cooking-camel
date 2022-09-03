@@ -1,6 +1,9 @@
 package edu.wpi.cs.dbms.domain.entity;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.CascadeType;
@@ -13,13 +16,18 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
 @Entity
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@EqualsAndHashCode(of = "id")
 @Table(schema = "cooking_camel_schema", name = "recipe")
 public class Recipe {
 
@@ -34,6 +42,7 @@ public class Recipe {
 
     private String detailedIngredients;
 
+    // TODO: try eager loading
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_username")
@@ -48,10 +57,6 @@ public class Recipe {
     private List<Ingredient> ingredients = new ArrayList<>();
 
     @ToString.Exclude
-    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-    @JoinTable(schema = "cooking_camel_schema", name = "user_favorite_recipe",
-            joinColumns = @JoinColumn(name = "recipe_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "username", referencedColumnName = "username")
-    )
-    private List<User> users = new ArrayList<>();
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.REMOVE)
+    private List<UserFavoriteRecipe> users = new ArrayList<>();
 }
