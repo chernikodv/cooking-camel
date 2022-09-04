@@ -16,17 +16,17 @@ It also allows you to create recipes, make recipe favorites, look for trending o
 
 ### Prerequisites
 
-1) Java 11
-2) Apache Maven
-3) Docker
+1) `Java 11`
+2) `Apache Maven`
+3) `Docker`
 
 ### Technology stack
 
-1. Java 11, Spring Framework (Core, Data, MVC, Security, Boot)
-2. PostgreSQL, Flyway Database Migration
-3. Lombok, JWT, OpenAPI 3.0
-4. Apache Maven
-5. Docker
+1) `Java 11, Spring Framework (Core, Data, MVC, Security, Boot)`
+2) `PostgreSQL, Flyway Database Migration`
+3) `Lombok, JWT, OpenAPI 3.0` 
+4) `Apache Maven`
+5) `Docker`
 
 ### List of Features
 
