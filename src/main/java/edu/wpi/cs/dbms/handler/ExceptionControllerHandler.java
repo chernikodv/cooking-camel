@@ -2,6 +2,7 @@ package edu.wpi.cs.dbms.handler;
 
 import edu.wpi.cs.dbms.domain.dto.GenericResponse;
 import edu.wpi.cs.dbms.exception.PasswordMatchException;
+import edu.wpi.cs.dbms.exception.ResourceViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -35,6 +36,18 @@ public class ExceptionControllerHandler {
                         .message(e.getMessage())
                         .build()
         );
+    }
+
+    @ExceptionHandler(value = ResourceViolationException.class)
+    public ResponseEntity<GenericResponse> handleResourceViolationException(Exception e) {
+        final HttpStatus status = HttpStatus.BAD_REQUEST;
+        return ResponseEntity
+                .status(status)
+                .body(GenericResponse.builder()
+                        .code(status.value())
+                        .message(e.getMessage())
+                        .build()
+                );
     }
 
     @ExceptionHandler(value = AuthenticationException.class)
