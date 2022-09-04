@@ -18,10 +18,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserFavoriteRecipeService {
 
+    private final UserService userService;
     private final UserFavoriteRecipeRepository userFavoriteRecipeRepository;
 
-    public Page<UserFavoriteRecipe> findByUser(Integer page, Integer size, User user) {
-        return userFavoriteRecipeRepository.findAllByUserOrderByLikedOnAsc(user, PageRequest.of(page, size));
+    public Page<UserFavoriteRecipe> findFavoriteRecipes(Integer page, Integer size) {
+        final User user = userService.findAuthenticatedUser();
+        return userFavoriteRecipeRepository.findAllByUser(user, PageRequest.of(page, size));
     }
 
     public UserFavoriteRecipe save(User user, Recipe recipe) {

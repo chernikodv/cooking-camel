@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 public class UserFavoriteRecipeMapper {
 
     public RecipeResponse mapEntityToRecipeResponse(UserFavoriteRecipe userFavoriteRecipe) {
-        // TODO: deal with loading of owner while finding favorites
         final Recipe recipe = userFavoriteRecipe.getRecipe();
         final User owner = recipe.getOwner();
 
@@ -22,6 +21,5 @@ public class UserFavoriteRecipeMapper {
                 .ownerUsername(owner.getUsername())
                 .detailedIngredients(recipe.getDetailedIngredients())
                 .build();
-
     }
 }

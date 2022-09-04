@@ -16,7 +16,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import java.util.ArrayList;
@@ -42,9 +41,9 @@ public class Recipe {
 
     private String detailedIngredients;
 
-    // TODO: try eager loading
+    // eager loading reduces total number of queries
     @ToString.Exclude
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_username")
     private User owner;
 
@@ -55,8 +54,4 @@ public class Recipe {
             inverseJoinColumns = @JoinColumn(name = "ingredient_id", referencedColumnName = "id")
     )
     private List<Ingredient> ingredients = new ArrayList<>();
-
-    @ToString.Exclude
-    @OneToMany(mappedBy = "recipe", cascade = CascadeType.REMOVE)
-    private List<UserFavoriteRecipe> users = new ArrayList<>();
 }

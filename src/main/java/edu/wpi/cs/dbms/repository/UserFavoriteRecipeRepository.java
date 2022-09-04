@@ -16,7 +16,7 @@ import java.util.List;
 public interface UserFavoriteRecipeRepository extends JpaRepository<UserFavoriteRecipe, UserFavoriteRecipeId> {
 
     @EntityGraph(attributePaths = {"recipe"})
-    Page<UserFavoriteRecipe> findAllByUserOrderByLikedOnAsc(User user, Pageable pageable);
+    Page<UserFavoriteRecipe> findAllByUser(User user, Pageable pageable);
 
     @Query(name = "findTrendingRecipes", nativeQuery = true)
     List<TrendingRecipe> findTrendingRecipes(LocalDateTime start, LocalDateTime end, Pageable pageable);
