@@ -10,8 +10,8 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000/")
 @RequestMapping(path = "/api/ingredients")
+@CrossOrigin(origins = "http://localhost:3000/")
 public class IngredientController {
 
     private final IngredientService ingredientService;
