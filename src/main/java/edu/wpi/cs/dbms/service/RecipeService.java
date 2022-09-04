@@ -1,22 +1,31 @@
 package edu.wpi.cs.dbms.service;
 
 import edu.wpi.cs.dbms.domain.dto.GenericResponse;
-import edu.wpi.cs.dbms.domain.dto.recipe.*;
+import edu.wpi.cs.dbms.domain.dto.recipe.CreateRecipeRequest;
+import edu.wpi.cs.dbms.domain.dto.recipe.RecipeResponse;
+import edu.wpi.cs.dbms.domain.dto.recipe.SearchRecipeResponse;
+import edu.wpi.cs.dbms.domain.dto.recipe.TrendingRecipe;
+import edu.wpi.cs.dbms.domain.dto.recipe.UpdateRecipeRequest;
 import edu.wpi.cs.dbms.domain.entity.Ingredient;
 import edu.wpi.cs.dbms.domain.entity.Recipe;
 import edu.wpi.cs.dbms.domain.entity.User;
-import edu.wpi.cs.dbms.exception.DeleteResourceException;
+import edu.wpi.cs.dbms.domain.entity.UserFavoriteRecipe;
+import edu.wpi.cs.dbms.exception.ResourceViolationException;
 import edu.wpi.cs.dbms.mapper.RecipeMapper;
+import edu.wpi.cs.dbms.mapper.UserFavoriteRecipeMapper;
 import edu.wpi.cs.dbms.repository.IngredientRepository;
 import edu.wpi.cs.dbms.repository.RecipeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,116 +34,83 @@ public class RecipeService {
 
     private final UserService userService;
     private final RecipeMapper recipeMapper;
-    private final FavoriteService favoriteService;
     private final RecipeRepository recipeRepository;
     private final IngredientRepository ingredientRepository;
-    private final AuthenticationTokenInfoExtractor tokenInfoExtractor;
+    private final UserFavoriteRecipeMapper userFavoriteRecipeMapper;
+    private final UserFavoriteRecipeService userFavoriteRecipeService;
 
-    public List<SearchRecipeResponse> find(List<Long> ingredientIds, Integer page, Integer size) {
+    public List<SearchRecipeResponse> find(Integer page, Integer size, List<Long> ingredientIds) {
         final List<Ingredient> ingredients = ingredientRepository.findAllById(ingredientIds);
-        final List<Recipe> recipes = recipeRepository.findAllByIngredientsIn(ingredients);
-        final User user = userService.findById(tokenInfoExtractor.getUsername());
+        final Page<Recipe> recipes = recipeRepository.findAllByIngredientsIn(ingredients, PageRequest.of(page, size));
+        final Set<Recipe> favoriteRecipes = findFavorite();
 
         return recipes.stream()
-                .distinct()
-                .map(recipe -> recipeMapper.mapEntityToSearchResponse(recipe, ingredients, user))
-                .sorted(Comparator.comparingDouble(SearchRecipeResponse::findRelevance)
-                        .thenComparing(SearchRecipeResponse::getTitle)
-                )
-                .skip((long) page * size)
-                .limit(size)
+                .map(recipe -> recipeMapper.mapEntityToSearchResponse(recipe, favoriteRecipes, ingredients))
                 .collect(Collectors.toList());
-    }
-
-    public RecipeResponse findRecipeById(Long ingredientId) {
-        final Optional<Recipe> maybeRecipe = recipeRepository.findById(ingredientId);
-        if (maybeRecipe.isEmpty()) {
-            throw new NoSuchElementException("Could not find a recipe by the given id ...");
-        }
-
-        final User user = userService.findById(tokenInfoExtractor.getUsername());
-        return recipeMapper.mapEntityToResponse(maybeRecipe.get(), user);
     }
 
     public RecipeResponse create(CreateRecipeRequest createRecipeRequest) {
         final Recipe recipe = recipeMapper.mapCreateRequestToEntity(createRecipeRequest);
-        final User owner = userService.findById(tokenInfoExtractor.getUsername());
+        final User owner = userService.findAuthenticatedUser();
         recipe.setOwner(owner);
 
         final List<Ingredient> ingredients = ingredientRepository.findAllById(createRecipeRequest.getIngredientIds());
         recipe.getIngredients().addAll(ingredients);
 
         final Recipe savedRecipe = recipeRepository.save(recipe);
-        return recipeMapper.mapEntityToResponse(savedRecipe, owner);
+        return recipeMapper.mapEntityToResponse(savedRecipe, Set.of());
     }
 
-    public RecipeResponse update(Long id, UpdateRecipeRequest updateRecipeRequest) {
-        final User user = userService.findById(tokenInfoExtractor.getUsername());
-        final Recipe recipe = recipeMapper.mapUpdateRequestToExistingEntity(updateRecipeRequest, findById(id));
+    public RecipeResponse update(UpdateRecipeRequest updateRecipeRequest) {
+        final User user = userService.findAuthenticatedUser();
+        final Recipe recipe = findById(updateRecipeRequest.getId());
 
+        if (!user.equals(recipe.getOwner())) {
+            throw new ResourceViolationException("Could not update not your recipe ...");
+        }
+
+        final Recipe mappedRecipe = recipeMapper.mapUpdateRequestToExistingEntity(recipe, updateRecipeRequest);
         final List<Ingredient> ingredients = ingredientRepository.findAllById(updateRecipeRequest.getIngredientIds());
-        recipe.getIngredients().addAll(ingredients);
+        mappedRecipe.getIngredients().addAll(ingredients);
 
-        final Recipe updatedRecipe = recipeRepository.save(recipe);
-        return recipeMapper.mapEntityToResponse(updatedRecipe, user);
+        final Set<Recipe> favoriteRecipes = findFavorite();
+        final Recipe updatedRecipe = recipeRepository.save(mappedRecipe);
+        return recipeMapper.mapEntityToResponse(updatedRecipe, favoriteRecipes);
     }
 
     public List<RecipeResponse> findFavorites(Integer page, Integer size) {
-        final User user = userService.findById(tokenInfoExtractor.getUsername());
-        final Page<Recipe> recipes = recipeRepository.findAllByUsersIn(
-                List.of(user),
-                PageRequest.of(page, size)
-        );
-
-        return recipes.stream()
-                .map(recipe -> recipeMapper.mapEntityToResponse(recipe, user))
+        final Page<UserFavoriteRecipe> favoriteRecipes = userFavoriteRecipeService.findFavoriteRecipes(page, size);
+        return favoriteRecipes.stream()
+                .map(userFavoriteRecipeMapper::mapEntityToRecipeResponse)
                 .collect(Collectors.toList());
     }
 
     public RecipeResponse addFavorite(Long id) {
         final Recipe recipe = findById(id);
-        final User user = userService.findById(tokenInfoExtractor.getUsername());
+        final User user = userService.findAuthenticatedUser();
+        final UserFavoriteRecipe savedUserFavoriteRecipe = userFavoriteRecipeService.save(user, recipe);
 
-        recipe.getUsers().add(user);
-        final Recipe savedRecipe = recipeRepository.save(recipe);
-
-        return recipeMapper.mapEntityToResponse(savedRecipe, user);
+        return userFavoriteRecipeMapper.mapEntityToRecipeResponse(savedUserFavoriteRecipe);
     }
 
-    public RecipeResponse removeFavorite(Long id) {
+    public GenericResponse removeFavorite(Long id) {
         final Recipe recipe = findById(id);
-        final User user = userService.findById(tokenInfoExtractor.getUsername());
+        final User user = userService.findAuthenticatedUser();
+        userFavoriteRecipeService.remove(user, recipe);
 
-        recipe.getUsers().remove(user);
-        final Recipe savedRecipe = recipeRepository.save(recipe);
-
-        return recipeMapper.mapEntityToResponse(savedRecipe, user);
+        return GenericResponse.builder()
+                .code(HttpStatus.OK.value())
+                .message("Favorite recipe successfully deleted ...")
+                .build();
     }
 
     public List<RecipeResponse> findTrending(Integer page, Integer size) {
-        final User user = userService.findById(tokenInfoExtractor.getUsername());
-        final List<String> trendingRecipeTitles = favoriteService.findTrendingRecipeTitles(page, size);
-        return trendingRecipeTitles.stream()
-                .map(this::findByTitle)
-                .map(recipe -> recipeMapper.mapEntityToResponse(recipe, user))
+        final List<Recipe> trendingRecipes = findTrendingByTrendingRecipeIds(page, size);
+        final Map<Long, RecipeResponse> idToResponse = createIdToResponseMap(trendingRecipes);
+
+        return trendingRecipes.stream()
+                .map(trendingRecipe -> idToResponse.get(trendingRecipe.getId()))
                 .collect(Collectors.toList());
-    }
-
-    public ResponseEntity<GenericResponse> delete(Long id) {
-        final Recipe recipe = findById(id);
-        recipe.getUsers().clear();
-
-        try {
-            recipeRepository.delete(recipe);
-        } catch (Exception e) {
-            throw new DeleteResourceException("Could not delete a recipe by the given id ...");
-        }
-
-        return ResponseEntity.ok(GenericResponse.builder()
-                .code(HttpStatus.OK.value())
-                .message("Recipe successfully deleted ...")
-                .build()
-        );
     }
 
     private Recipe findById(Long id) {
@@ -142,8 +118,30 @@ public class RecipeService {
         return maybeRecipe.orElseThrow(() -> new NoSuchElementException("Could not find a recipe by the given id ..."));
     }
 
-    private Recipe findByTitle(String title) {
-        final Optional<Recipe> maybeRecipe = recipeRepository.findByTitle(title);
-        return maybeRecipe.orElseThrow(() -> new NoSuchElementException("Could not find a recipe by the given title ..."));
+    private List<Recipe> findTrendingByTrendingRecipeIds(Integer page, Integer size) {
+        final List<Long> trendingRecipeIds = userFavoriteRecipeService.findTrendingRecipes(page, size)
+                .stream()
+                .map(TrendingRecipe::getId)
+                .collect(Collectors.toList());
+        return recipeRepository.findAllById(trendingRecipeIds);
+    }
+
+    private Set<Recipe> findFavorite() {
+        final Page<UserFavoriteRecipe> recipes = userFavoriteRecipeService.findFavoriteRecipes(0, Integer.MAX_VALUE);
+        return recipes.stream()
+                .map(UserFavoriteRecipe::getRecipe)
+                .collect(Collectors.toSet());
+    }
+
+    private Map<Long, RecipeResponse> createIdToResponseMap(List<Recipe> trendingRecipes) {
+        final Set<Recipe> favoriteRecipes = findFavorite();
+        return trendingRecipes.stream()
+                .map(recipe -> recipeMapper.mapEntityToResponse(recipe, favoriteRecipes))
+                .collect(
+                        Collectors.toMap(
+                                RecipeResponse::getId,
+                                recipeResponse -> recipeResponse
+                        )
+                );
     }
 }

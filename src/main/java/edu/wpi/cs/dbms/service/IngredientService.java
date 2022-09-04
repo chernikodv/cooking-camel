@@ -32,8 +32,7 @@ public class IngredientService {
         if (name == null || name.isBlank()) {
             ingredients = ingredientRepository.findAll(PageRequest.of(page, size));
         } else {
-            ingredients = ingredientRepository.findAllByNameLike(name + "%", PageRequest.of(page, size));
-
+            ingredients = ingredientRepository.findAllByNameLike(name, PageRequest.of(page, size));
         }
 
         return ingredients.stream()

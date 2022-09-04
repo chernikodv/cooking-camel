@@ -1,18 +1,24 @@
 package edu.wpi.cs.dbms.domain.entity;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
 @Entity
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@EqualsAndHashCode(of = "username")
 @Table(schema = "cooking_camel_schema", name = "user")
 public class User {
 
@@ -32,8 +38,4 @@ public class User {
     @ToString.Exclude
     @OneToMany(mappedBy = "owner")
     private List<Recipe> createdRecipes = new ArrayList<>();
-
-    @ToString.Exclude
-    @ManyToMany(mappedBy = "users")
-    private List<Recipe> favoriteRecipes = new ArrayList<>();
 }

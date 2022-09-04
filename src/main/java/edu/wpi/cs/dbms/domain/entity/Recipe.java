@@ -1,6 +1,9 @@
 package edu.wpi.cs.dbms.domain.entity;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.CascadeType;
@@ -18,8 +21,12 @@ import javax.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
 @Entity
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@EqualsAndHashCode(of = "id")
 @Table(schema = "cooking_camel_schema", name = "recipe")
 public class Recipe {
 
@@ -34,8 +41,9 @@ public class Recipe {
 
     private String detailedIngredients;
 
+    // eager loading reduces total number of queries
     @ToString.Exclude
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_username")
     private User owner;
 
@@ -46,12 +54,4 @@ public class Recipe {
             inverseJoinColumns = @JoinColumn(name = "ingredient_id", referencedColumnName = "id")
     )
     private List<Ingredient> ingredients = new ArrayList<>();
-
-    @ToString.Exclude
-    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-    @JoinTable(schema = "cooking_camel_schema", name = "user_favorite_recipe",
-            joinColumns = @JoinColumn(name = "recipe_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "username", referencedColumnName = "username")
-    )
-    private List<User> users = new ArrayList<>();
 }

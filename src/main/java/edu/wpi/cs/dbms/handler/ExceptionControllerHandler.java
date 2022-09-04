@@ -2,6 +2,7 @@ package edu.wpi.cs.dbms.handler;
 
 import edu.wpi.cs.dbms.domain.dto.GenericResponse;
 import edu.wpi.cs.dbms.exception.PasswordMatchException;
+import edu.wpi.cs.dbms.exception.ResourceViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -25,7 +26,7 @@ public class ExceptionControllerHandler {
         );
     }
 
-    @ExceptionHandler(value = PasswordMatchException.class)
+    @ExceptionHandler(value = { PasswordMatchException.class, ResourceViolationException.class })
     public ResponseEntity<GenericResponse> handlePasswordMatchException(Exception e) {
         final HttpStatus status = HttpStatus.BAD_REQUEST;
         return ResponseEntity

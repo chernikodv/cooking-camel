@@ -27,8 +27,7 @@ public class UserService {
     }
 
     public UserResponse update(UpdateUserRequest updateUserRequest) {
-        final String username = authenticationTokenInfoExtractor.getUsername();
-        final User user = userMapper.mapUpdateRequestToExistingEntity(updateUserRequest, findById(username));
+        final User user = userMapper.mapUpdateRequestToExistingEntity(updateUserRequest, findAuthenticatedUser());
         final User updatedUser = userRepository.save(user);
         return userMapper.mapEntityToResponse(updatedUser);
     }
@@ -38,7 +37,12 @@ public class UserService {
         return userMapper.mapEntityToResponse(user);
     }
 
-    public User findById(String username) {
+    public User findAuthenticatedUser() {
+        final String username = authenticationTokenInfoExtractor.getUsername();
+        return findById(username);
+    }
+
+    private User findById(String username) {
         final Optional<User> maybeUser = userRepository.findById(username);
         return maybeUser.orElseThrow(() -> new NoSuchElementException("Could not find a user by the given username ..."));
     }
