@@ -8,11 +8,11 @@
 
 ### About/Overview
 
-This is the ultimate platform for sharing and looking for recipes.
+It is the ultimate platform for sharing and looking for recipes.
 The goal of this platform is to make cooking less of a hassle for users.
-Say, a user has an assortment of random ingredients around their kitchen.
-The platform allows to enter them and finds recipes matching them partially or fully.
-It also allows for adding ingredients, creating recipes, making recipes favorite, and looking for trending ones.
+Assume a user has an assortment of random ingredients around their kitchen.
+The platform allows him to find recipes matching them partially or fully.
+It also allows you to create recipes, make recipe favorites, look for trending ones, and other stuff.
 
 ### Prerequisites
 
