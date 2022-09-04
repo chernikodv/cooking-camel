@@ -26,7 +26,7 @@ public class ExceptionControllerHandler {
         );
     }
 
-    @ExceptionHandler(value = PasswordMatchException.class)
+    @ExceptionHandler(value = { PasswordMatchException.class, ResourceViolationException.class })
     public ResponseEntity<GenericResponse> handlePasswordMatchException(Exception e) {
         final HttpStatus status = HttpStatus.BAD_REQUEST;
         return ResponseEntity
@@ -36,18 +36,6 @@ public class ExceptionControllerHandler {
                         .message(e.getMessage())
                         .build()
         );
-    }
-
-    @ExceptionHandler(value = ResourceViolationException.class)
-    public ResponseEntity<GenericResponse> handleResourceViolationException(Exception e) {
-        final HttpStatus status = HttpStatus.BAD_REQUEST;
-        return ResponseEntity
-                .status(status)
-                .body(GenericResponse.builder()
-                        .code(status.value())
-                        .message(e.getMessage())
-                        .build()
-                );
     }
 
     @ExceptionHandler(value = AuthenticationException.class)
