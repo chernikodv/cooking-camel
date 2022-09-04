@@ -40,10 +40,9 @@ public class RecipeController {
         return recipeService.create(recipeRequest);
     }
 
-    // TODO: add id to request
-    @PutMapping(path = "/{id}")
-    public RecipeResponse update(@PathVariable Long id, @RequestBody UpdateRecipeRequest recipeRequest) {
-        return recipeService.update(id, recipeRequest);
+    @PutMapping
+    public RecipeResponse update(@RequestBody UpdateRecipeRequest recipeRequest) {
+        return recipeService.update(recipeRequest);
     }
 
     @GetMapping(path = "/favorites")
