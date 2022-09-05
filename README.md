@@ -43,6 +43,8 @@ It also allows you to create recipes, make recipe favorites, look for trending o
 11) `DELETE /api/recipes/favorites/{id}`: removing a recipe from your favorite recipes (for authenticated users only)
 12) `GET /api/recipes/trending`: looking for trending recipes for a certain period (for authenticated users only)
 
+To see the detailed information about the given endpoints, run the application and go to `http://localhost:8080/cooking-camel/swagger-ui.html`. 
+
 ### How to Run
 
 1) Open a terminal in any folder you like and run the following commands
